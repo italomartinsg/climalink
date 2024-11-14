@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Cidades</title>
+    <style>
+        .suggestions {
+            border: 1px solid #ccc;
+            max-width: 300px;
+        }
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Buscar Cidades</h1>
+    <input type="text" id="city-search" placeholder="Digite o nome da cidade" />
+    <div id="suggestions" class="suggestions"></div>
+
+    <script>
+        const input = document.getElementById('city-search');
+        const suggestions = document.getElementById('suggestions');
+
+        input.addEventListener('input', async () => {
+            const query = input.value;
+
+            if (query.length < 3) {
+                suggestions.innerHTML = ''; // Limpa as sugestões se o termo for muito curto
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://wft-geo-db.p.rapidapi.com/v1/geo/cities?namePrefix=${query}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-key': '1e4c517139mshf389ff6095374d5p120f73jsn9102191c467d',
+                        'x-rapidapi-host': 'wft-geo-db.p.rapidapi.com'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySuggestions(data.data);
+                } else {
+                    console.error('Erro na requisição:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('Erro de rede:', error);
+            }
+        });
+
+        function displaySuggestions(cities) {
+            suggestions.innerHTML = ''; // Limpa as sugestões anteriores
+
+            if (cities.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.textContent = 'Nenhuma cidade encontrada.';
+                suggestions.appendChild(noResults);
+                return;
+            }
+
+            cities.forEach(city => {
+                const item = document.createElement('div');
+                item.classList.add('suggestion-item');
+                item.textContent = `${city.name}, ${city.region}, ${city.country}`;
+                suggestions.appendChild(item);
+
+                // Evento para selecionar uma cidade
+                item.addEventListener('click', () => {
+                    input.value = city.name;
+                    suggestions.innerHTML = ''; // Limpa as sugestões
+                });
+            });
+        }
+    </script>
+</body>
+</html>
